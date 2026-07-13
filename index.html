@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ipeBus</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: radial-gradient(circle at top, #2d3748, #0f172a 60%);
+        color: #e2e8f0;
+      }
+
+      main {
+        width: min(960px, calc(100vw - 32px));
+        padding: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 20px;
+        background: rgba(15, 23, 42, 0.82);
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+      }
+
+      #game-root {
+        margin-top: 16px;
+        min-height: 280px;
+        border-radius: 16px;
+        border: 1px dashed rgba(148, 163, 184, 0.35);
+        display: grid;
+        place-items: center;
+        text-align: center;
+        padding: 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>ipeBus</h1>
+      <p>Motor unificado pronto para a camada gráfica do navegador.</p>
+      <div id="game-root">Carregando motor...</div>
+    </main>
+    <script type="module" src="./src/browser/main.js"></script>
+  </body>
+</html>

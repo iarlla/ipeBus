@@ -114,7 +114,7 @@ O fluxo geral de execução será gerenciado por um controlador central de estad
 
 Quando portarmos a lógica para a interface Web em arquivo único:
 
-O arquivo `index.html` conterá um elemento `canvas` com `id="gameCanvas"` ocupando a maior parte da tela.
+O arquivo `index.html` conterá uma área de renderização principal identificada como `gameCanvas`, ocupando a maior parte da tela.
 
 O loop gráfico (requestAnimationFrame) lerá os dados de posição e velocidade virtual de GameEngine.js e desenhará o ônibus em movimento linear (side-scroller ou top-down horizontal).
 
