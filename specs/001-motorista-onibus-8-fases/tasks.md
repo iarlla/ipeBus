@@ -113,15 +113,15 @@ Checkpoint: O jogo CLI de 8 fases está 100% completo, incluindo toda a lógica 
 
 Objetivo: Portar o motor do jogo 100% desacoplado para uma interface rica, animada e de arquivo único rodando direto no navegador.
 
-- [ ] T028 Criar o documento de arquivo único index.html importando as classes JavaScript do motor unificadas.
+- [x] T028 Criar o documento de arquivo único index.html importando as classes JavaScript do motor unificadas.
 
-- [ ] T029 Configurar o loop de renderização gráfica 2D (requestAnimationFrame a 60 FPS estáveis) mapeando os controles para teclado (Setas/WASD).
+- [x] T029 Configurar o loop de renderização gráfica 2D (requestAnimationFrame a 60 FPS estáveis) mapeando os controles para teclado (Setas/WASD).
 
-- [ ] T030 Desenhar os estados visuais enriquecidos do ônibus se deslocando linearmente na rota, com semáforos trocando de cor e pedestres animados andando.
+- [x] T030 Desenhar os estados visuais enriquecidos do ônibus se deslocando linearmente na rota, com semáforos trocando de cor e pedestres animados andando.
 
-- [ ] T031 Criar telas em modais dinâmicos usando Tailwind CSS para o Menu Inicial, a Tela de Upgrades da Garagem e o modal de Game Over.
+- [x] T031 Criar telas em modais dinâmicos usando Tailwind CSS para o Menu Inicial, a Tela de Upgrades da Garagem e o modal de Game Over.
 
-- [ ] T032 Homologar e testar o funcionamento offline salvando e carregando de forma transparente com localStorage.
+- [x] T032 Homologar e testar o funcionamento offline salvando e carregando de forma transparente com localStorage.
 
 ## Dependências & Execução
 

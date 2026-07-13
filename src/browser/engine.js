@@ -175,6 +175,7 @@ export class Level {
       position,
       speed,
       active: true,
+      crossProgress: 0,
     };
 
     this.pedestrians.push(pedestrian);
@@ -210,6 +211,10 @@ export class Level {
       .map((pedestrian) => ({
         ...pedestrian,
         position: pedestrian.position + pedestrian.speed * deltaTime,
+        crossProgress: Math.min(
+          1,
+          (pedestrian.crossProgress || 0) + deltaTime * 0.08,
+        ),
       }))
       .filter((pedestrian) => pedestrian.active);
 
@@ -379,6 +384,32 @@ export class Level {
     const currentPhase = this.getCurrentPhase();
     return currentPhase?.maxCurveSpeed ?? 12;
   }
+
+  advancePhase() {
+    if (this.currentPhaseIndex < this.phases.length - 1) {
+      this.currentPhaseIndex += 1;
+      this.elapsedTime = 0;
+      this.trafficLight = 'green';
+      this.pedestrians = [];
+      this.cyclists = [];
+      this.stopZones = [];
+      this.heavyTrafficCars = [];
+      this.transitPassengers = [];
+      return true;
+    }
+
+    return false;
+  }
+
+  resetPhase() {
+    this.elapsedTime = 0;
+    this.trafficLight = 'green';
+    this.pedestrians = [];
+    this.cyclists = [];
+    this.stopZones = [];
+    this.heavyTrafficCars = [];
+    this.transitPassengers = [];
+  }
 }
 
 export class Persistence {
@@ -388,14 +419,48 @@ export class Persistence {
     this.memory = new Map();
   }
 
-  saveGarageProgress(progress) {
-    this.memory.set(this.storageKey, { garage: progress });
+  saveGarageProgress(progress, targetPath = null) {
+    return this.save({ garage: progress }, targetPath);
+  }
+
+  loadGarageProgress(targetPath = null, fallbackValue = null) {
+    const payload = this.load(targetPath, null);
+    return payload?.garage ?? fallbackValue;
+  }
+
+  save(data, targetPath = null) {
+    const serialized = JSON.stringify(data, null, 2);
+
+    if (this._canUseLocalStorage() && !targetPath) {
+      globalThis.localStorage.setItem(this.storageKey, serialized);
+      return true;
+    }
+
+    this.memory.set(targetPath || this.storageKey, data);
     return true;
   }
 
-  loadGarageProgress(_targetPath = null, fallbackValue = null) {
-    const payload = this.memory.get(this.storageKey);
-    return payload?.garage ?? fallbackValue;
+  load(targetPath = null, fallbackValue = null) {
+    if (this._canUseLocalStorage() && !targetPath) {
+      const raw = globalThis.localStorage.getItem(this.storageKey);
+      return raw ? JSON.parse(raw) : fallbackValue;
+    }
+
+    return this.memory.get(targetPath || this.storageKey) ?? fallbackValue;
+  }
+
+  delete(targetPath = null) {
+    if (this._canUseLocalStorage() && !targetPath) {
+      globalThis.localStorage.removeItem(this.storageKey);
+      return true;
+    }
+
+    this.memory.delete(targetPath || this.storageKey);
+    return true;
+  }
+
+  _canUseLocalStorage() {
+    return typeof globalThis.localStorage !== 'undefined';
   }
 }
 
@@ -418,9 +483,9 @@ export class GameEngine {
     this.balance = 0;
     this.upgradesPurchased = [];
     this.garageCatalog = [
-      { name: 'brakes', cost: 12, type: 'safety' },
-      { name: 'tires', cost: 10, type: 'safety' },
-      { name: 'engine', cost: 20, type: 'performance' },
+      { name: 'brakes', cost: 12, type: 'safety', label: 'Freios' },
+      { name: 'tires', cost: 10, type: 'safety', label: 'Pneus' },
+      { name: 'engine', cost: 20, type: 'performance', label: 'Motor' },
     ];
   }
 
@@ -468,7 +533,9 @@ export class GameEngine {
   }
 
   buyGarageItem(itemName) {
-    const item = this.garageCatalog.find((garageItem) => garageItem.name === itemName);
+    const item = this.garageCatalog.find(
+      (garageItem) => garageItem.name === itemName,
+    );
 
     if (!item) {
       return false;
@@ -477,17 +544,25 @@ export class GameEngine {
     return this.purchaseUpgrade(item.name, item.cost);
   }
 
-  saveGarageProgress() {
-    return this.persistence.saveGarageProgress({
-      balance: this.balance,
-      upgradesPurchased: [...this.upgradesPurchased],
-      busUpgrades: [...this.bus.upgrades],
-      state: this.state,
-    });
+  saveGarageProgress(targetPath = null) {
+    return this.persistence.saveGarageProgress(
+      {
+        balance: this.balance,
+        upgradesPurchased: [...this.upgradesPurchased],
+        busUpgrades: [...this.bus.upgrades],
+        state: this.state,
+        currentPhaseIndex: this.level.currentPhaseIndex,
+        busHealth: this.bus.health,
+      },
+      targetPath,
+    );
   }
 
-  loadGarageProgress() {
-    const garageProgress = this.persistence.loadGarageProgress(null, null);
+  loadGarageProgress(targetPath = null) {
+    const garageProgress = this.persistence.loadGarageProgress(
+      targetPath,
+      null,
+    );
 
     if (!garageProgress) {
       return null;
@@ -496,6 +571,15 @@ export class GameEngine {
     this.balance = garageProgress.balance ?? this.balance;
     this.upgradesPurchased = [...(garageProgress.upgradesPurchased ?? [])];
     this.bus.upgrades = [...(garageProgress.busUpgrades ?? this.bus.upgrades)];
+
+    if (typeof garageProgress.currentPhaseIndex === 'number') {
+      this.level.currentPhaseIndex = garageProgress.currentPhaseIndex;
+    }
+
+    if (typeof garageProgress.busHealth === 'number') {
+      this.bus.integrity = garageProgress.busHealth;
+      this.bus.health = garageProgress.busHealth;
+    }
 
     if (garageProgress.state) {
       this.setState(garageProgress.state);
@@ -544,8 +628,11 @@ export class GameEngine {
       return this.gameOver();
     }
 
-    if (this.level.isFinished() || this.bus.health <= 0) {
+    if (this.bus.isGameOver || this.bus.health <= 0) {
       this.gameOver();
+    } else if (this.level.isFinished()) {
+      this.collectFare(15);
+      this.openGarage();
     }
 
     return this.state;

@@ -71,7 +71,9 @@ class GameEngine {
   }
 
   buyGarageItem(itemName) {
-    const item = this.garageCatalog.find((garageItem) => garageItem.name === itemName);
+    const item = this.garageCatalog.find(
+      (garageItem) => garageItem.name === itemName,
+    );
 
     if (!item) {
       return false;
@@ -93,7 +95,10 @@ class GameEngine {
   }
 
   loadGarageProgress(targetPath = null) {
-    const garageProgress = this.persistence.loadGarageProgress(targetPath, null);
+    const garageProgress = this.persistence.loadGarageProgress(
+      targetPath,
+      null,
+    );
 
     if (!garageProgress) {
       return null;

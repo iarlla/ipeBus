@@ -21,5 +21,11 @@ module.exports = {
         browser: true,
       },
     },
+    {
+      files: ['tests/Persistence.localStorage.test.js'],
+      env: {
+        browser: true,
+      },
+    },
   ],
 };

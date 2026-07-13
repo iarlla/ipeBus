@@ -122,7 +122,9 @@ describe('GameEngine', () => {
       'garage.json',
     );
 
-    expect(engine.loadGarageProgress('garage.json')).toEqual(savedGarage.garage);
+    expect(engine.loadGarageProgress('garage.json')).toEqual(
+      savedGarage.garage,
+    );
     expect(engine.balance).toBe(18);
     expect(engine.bus.upgrades).toContain('tires');
     expect(engine.state).toBe('garage');

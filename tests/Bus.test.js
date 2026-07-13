@@ -13,7 +13,11 @@ describe('Bus', () => {
   });
 
   it('acelera, freia e aciona o efeito de frenagem brusca nos passageiros', () => {
-    const bus = new Bus({ speed: 10, maxSpeed: 12, passengers: [{ name: 'Ana' }] });
+    const bus = new Bus({
+      speed: 10,
+      maxSpeed: 12,
+      passengers: [{ name: 'Ana' }],
+    });
     const passengerImpactSpy = jest.spyOn(bus, '_affectPassengers');
 
     expect(bus.accelerate(5)).toBe(12);

@@ -3,49 +3,175 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ipeBus</title>
+    <title>ipeBus — Simulador de Motorista</title>
+    <link href="./dist/tailwind.css" rel="stylesheet" />
     <style>
-      :root {
-        color-scheme: dark;
-        font-family: Arial, Helvetica, sans-serif;
+      #gameCanvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border-radius: 0.75rem;
       }
 
-      body {
-        margin: 0;
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-        background: radial-gradient(circle at top, #2d3748, #0f172a 60%);
-        color: #e2e8f0;
-      }
-
-      main {
-        width: min(960px, calc(100vw - 32px));
-        padding: 24px;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 20px;
-        background: rgba(15, 23, 42, 0.82);
-        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
-      }
-
-      #game-root {
-        margin-top: 16px;
-        min-height: 280px;
-        border-radius: 16px;
-        border: 1px dashed rgba(148, 163, 184, 0.35);
-        display: grid;
-        place-items: center;
-        text-align: center;
-        padding: 24px;
+      .modal-backdrop {
+        backdrop-filter: blur(6px);
       }
     </style>
   </head>
-  <body>
-    <main>
-      <h1>ipeBus</h1>
-      <p>Motor unificado pronto para a camada gráfica do navegador.</p>
-      <div id="game-root">Carregando motor...</div>
-    </main>
+  <body class="min-h-screen bg-slate-950 font-display text-slate-100 antialiased">
+    <div class="mx-auto flex min-h-screen max-w-6xl flex-col gap-4 p-4 lg:p-6">
+      <header class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight text-amber-400">ipeBus</h1>
+          <p class="text-sm text-slate-400">Simulador de Motorista de Ônibus — 8 Fases</p>
+        </div>
+        <p class="rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs text-slate-400">
+          WASD / Setas para acelerar e frear
+        </p>
+      </header>
+
+      <div class="grid flex-1 gap-4 lg:grid-cols-[1fr_220px]">
+        <section
+          class="relative min-h-[360px] overflow-hidden rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl lg:min-h-[480px]"
+          id="game-root"
+        >
+          <canvas id="gameCanvas" aria-label="Área de jogo do simulador de ônibus"></canvas>
+        </section>
+
+        <aside class="flex flex-col gap-3 rounded-2xl border border-slate-700 bg-slate-900 p-4 shadow-xl">
+          <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400">Painel</h2>
+
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between rounded-lg bg-slate-800 px-3 py-2">
+              <span class="text-slate-400">Fase</span>
+              <span id="hud-phase" class="font-semibold text-amber-300">—</span>
+            </div>
+            <div class="flex justify-between rounded-lg bg-slate-800 px-3 py-2">
+              <span class="text-slate-400">Velocidade</span>
+              <span id="hud-speed" class="font-semibold">0 km/h</span>
+            </div>
+            <div class="flex justify-between rounded-lg bg-slate-800 px-3 py-2">
+              <span class="text-slate-400">Integridade</span>
+              <span id="hud-health" class="font-semibold text-emerald-400">100%</span>
+            </div>
+            <div class="flex justify-between rounded-lg bg-slate-800 px-3 py-2">
+              <span class="text-slate-400">Saldo</span>
+              <span id="hud-balance" class="font-semibold text-sky-300">R$ 0</span>
+            </div>
+            <div class="flex justify-between rounded-lg bg-slate-800 px-3 py-2">
+              <span class="text-slate-400">Atropelamentos</span>
+              <span id="hud-runovers" class="font-semibold text-rose-400">0/3</span>
+            </div>
+            <div class="flex justify-between rounded-lg bg-slate-800 px-3 py-2">
+              <span class="text-slate-400">Semáforo</span>
+              <span id="hud-traffic" class="font-semibold">Verde</span>
+            </div>
+            <div class="flex justify-between rounded-lg bg-slate-800 px-3 py-2">
+              <span class="text-slate-400">Progresso</span>
+              <span id="hud-progress" class="font-semibold">0%</span>
+            </div>
+            <div class="flex justify-between rounded-lg bg-slate-800/60 px-3 py-2 text-xs">
+              <span class="text-slate-500">Render</span>
+              <span id="hud-fps" class="text-slate-500">— FPS</span>
+            </div>
+          </div>
+
+          <p class="mt-auto text-xs leading-relaxed text-slate-500">
+            Respeite semáforos, pare nos pontos de embarque e evite atropelamentos. Progresso salvo
+            automaticamente no navegador.
+          </p>
+        </aside>
+      </div>
+    </div>
+
+    <!-- Modal: Menu Inicial -->
+    <div
+      id="modal-menu"
+      class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4"
+    >
+      <div
+        class="w-full max-w-md rounded-2xl border border-slate-600 bg-slate-900 p-8 text-center shadow-2xl"
+        role="dialog"
+        aria-labelledby="menu-title"
+      >
+        <div class="mb-6 text-5xl" aria-hidden="true">🚌</div>
+        <h2 id="menu-title" class="mb-2 text-3xl font-bold text-amber-400">ipeBus</h2>
+        <p class="mb-8 text-slate-400">
+          Dirija pelo trânsito urbano em 8 fases. Respeite as regras, embarque passageiros e
+          melhore seu ônibus na garagem.
+        </p>
+        <div class="flex flex-col gap-3">
+          <button
+            id="btn-start"
+            class="rounded-xl bg-amber-500 px-6 py-3 font-semibold text-slate-900 transition hover:bg-amber-400"
+          >
+            Iniciar Jogo
+          </button>
+          <button
+            id="btn-continue"
+            class="hidden rounded-xl border border-slate-600 bg-slate-800 px-6 py-3 font-semibold text-slate-200 transition hover:bg-slate-700"
+          >
+            Continuar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Garagem -->
+    <div
+      id="modal-garage"
+      class="modal-backdrop fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-950/80 p-4"
+    >
+      <div
+        class="w-full max-w-lg rounded-2xl border border-slate-600 bg-slate-900 p-6 shadow-2xl"
+        role="dialog"
+        aria-labelledby="garage-title"
+      >
+        <h2 id="garage-title" class="mb-1 text-2xl font-bold text-amber-400">Garagem</h2>
+        <p class="mb-4 text-sm text-slate-400">Fase concluída! Invista seus ganhos em upgrades.</p>
+        <p id="garage-balance" class="mb-4 text-lg font-semibold text-sky-300">Saldo: R$ 0</p>
+        <div id="garage-catalog" class="mb-6 flex flex-col gap-2"></div>
+        <button
+          id="btn-garage-continue"
+          class="w-full rounded-xl bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-500"
+        >
+          Avançar para Próxima Fase
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal: Game Over -->
+    <div
+      id="modal-gameover"
+      class="modal-backdrop fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-950/80 p-4"
+    >
+      <div
+        class="w-full max-w-md rounded-2xl border border-rose-900/60 bg-slate-900 p-8 text-center shadow-2xl"
+        role="dialog"
+        aria-labelledby="gameover-title"
+      >
+        <div class="mb-4 text-5xl" aria-hidden="true">💥</div>
+        <h2 id="gameover-title" class="mb-2 text-3xl font-bold text-rose-400">Game Over</h2>
+        <p id="gameover-reason" class="mb-4 text-slate-400">Viagem interrompida.</p>
+        <p id="gameover-phase" class="mb-1 text-sm text-slate-500">Fase alcançada: —</p>
+        <p id="gameover-balance" class="mb-8 font-semibold text-sky-300">Saldo: R$ 0</p>
+        <div class="flex flex-col gap-3">
+          <button
+            id="btn-restart"
+            class="rounded-xl bg-amber-500 px-6 py-3 font-semibold text-slate-900 transition hover:bg-amber-400"
+          >
+            Tentar Novamente
+          </button>
+          <button
+            id="btn-menu"
+            class="rounded-xl border border-slate-600 bg-slate-800 px-6 py-3 font-semibold text-slate-200 transition hover:bg-slate-700"
+          >
+            Voltar ao Menu
+          </button>
+        </div>
+      </div>
+    </div>
+
     <script type="module" src="./src/browser/main.js"></script>
   </body>
 </html>
